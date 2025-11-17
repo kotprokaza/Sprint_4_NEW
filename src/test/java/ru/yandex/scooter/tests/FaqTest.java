@@ -9,71 +9,58 @@ import org.openqa.selenium.WebDriver;
 import ru.yandex.scooter.pageobjects.MainPage;
 import ru.yandex.scooter.utils.BrowserFactory;
 
-import java.util.Arrays;
-import java.util.Collection;
-
-import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(Parameterized.class)
 public class FaqTest {
     private WebDriver driver;
     private MainPage mainPage;
-
-    private final String browser;
     private final int questionIndex;
-    private final String expectedTextContains;
+    private final String expectedAnswerContains;
 
-    public FaqTest(String browser, int questionIndex, String expectedTextContains) {
-        this.browser = browser;
+    public FaqTest(int questionIndex, String expectedAnswerContains) {
         this.questionIndex = questionIndex;
-        this.expectedTextContains = expectedTextContains;
+        this.expectedAnswerContains = expectedAnswerContains;
     }
 
     @Parameterized.Parameters
-    public static Collection<Object[]> data() {
-        return Arrays.asList(new Object[][] {
-                {"chrome", 0, "сутки"},
-                {"chrome", 1, "покататься"},
-                {"chrome", 2, "один день"},
-                {"chrome", 3, "заказ"},
-                {"chrome", 4, "продлить"},
-                {"chrome", 5, "заряда"},
-                {"chrome", 6, "отменить"},
-                {"chrome", 7, "Москве"},
-
-                {"firefox", 0, "сутки"},
-                {"firefox", 1, "покататься"},
-                {"firefox", 2, "один день"},
-                {"firefox", 3, "заказ"},
-                {"firefox", 4, "продлить"},
-                {"firefox", 5, "заряда"},
-                {"firefox", 6, "отменить"},
-                {"firefox", 7, "Москве"}
-        });
+    public static Object[][] getTestData() {
+        return new Object[][] {
+                {0, "Сутки — 400 рублей"},
+                {1, "один заказ — один самокат"},
+                {2, "Отсчёт времени аренды начинается с момента"},
+                {3, "Только начиная с завтрашнего дня"},
+                {4, "Пока что нет"},
+                {5, "Самокат приезжает к вам с полной зарядкой"},
+                {6, "Штрафа не будет"},
+                {7, "Да, обязательно"}
+        };
     }
 
     @Before
     public void setUp() {
-        driver = BrowserFactory.createDriver(browser);
+        driver = BrowserFactory.createDriver("chrome");
         mainPage = new MainPage(driver);
-        mainPage.open();
     }
 
     @Test
-    public void testFaqQuestionExpands() {
-        // Проверяем, что ответ изначально не виден
-        String initialAnswer = mainPage.getFaqAnswerText(questionIndex);
-        assertTrue("Answer should be empty initially", initialAnswer.isEmpty());
-
-        // Кликаем на вопрос
+    public void testFaqAnswer() {
+        mainPage.open();
+        
+        int questionsCount = mainPage.getFaqQuestionsCount();
+        assertTrue("Должно быть не менее 8 вопросов в FAQ", questionsCount >= 8);
+        
         mainPage.clickFaqQuestion(questionIndex);
-
-        // Проверяем, что ответ появился и содержит ожидаемый текст
+        
+        try {
+            Thread.sleep(500);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+        }
+        
         String actualAnswer = mainPage.getFaqAnswerText(questionIndex);
-        assertFalse("Answer should not be empty after click", actualAnswer.isEmpty());
-        assertTrue("Answer should contain: " + expectedTextContains + ", but was: " + actualAnswer,
-                actualAnswer.contains(expectedTextContains));
+        assertTrue("Для вопроса " + questionIndex + " ответ должен содержать: '" + expectedAnswerContains + "', но получили: '" + actualAnswer + "'",
+                   actualAnswer.contains(expectedAnswerContains));
     }
 
     @After

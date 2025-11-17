@@ -25,9 +25,6 @@ public class OrderTest {
 
     @Test
     public void testOrderViaTopButton() {
-        // Тест заказа через верхнюю кнопку "Заказать"
-        System.out.println("🧪 Тестирование заказа через ВЕРХНЮЮ кнопку");
-        
         mainPage.open();
         mainPage.clickTopOrderButton();
         
@@ -37,15 +34,10 @@ public class OrderTest {
         String successMessage = orderPage.getOrderSuccessMessage();
         assertTrue("Заказ должен быть успешно оформлен через верхнюю кнопку", 
                    successMessage.contains("Заказ оформлен"));
-        
-        System.out.println("✅ Тест верхней кнопки пройден");
     }
 
     @Test
     public void testOrderViaBottomButton() {
-        // Тест заказа через нижнюю кнопку "Заказать"
-        System.out.println("🧪 Тестирование заказа через НИЖНЮЮ кнопку");
-        
         mainPage.open();
         mainPage.clickBottomOrderButton();
         
@@ -55,8 +47,6 @@ public class OrderTest {
         String successMessage = orderPage.getOrderSuccessMessage();
         assertTrue("Заказ должен быть успешно оформлен через нижнюю кнопку", 
                    successMessage.contains("Заказ оформлен"));
-        
-        System.out.println("✅ Тест нижней кнопки пройден");
     }
 
     @After
