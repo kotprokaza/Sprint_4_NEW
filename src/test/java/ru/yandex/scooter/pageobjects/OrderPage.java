@@ -7,7 +7,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import ru.yandex.scooter.config.AppConfig;
 import ru.yandex.scooter.model.Order;
 
 import java.time.Duration;
@@ -41,7 +40,17 @@ public class OrderPage {
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
-    // ИСПРАВЛЕННЫЙ МЕТОД ВЫБОРА СТАНЦИИ МЕТРО
+    // Вспомогательный метод для безопасного sleep
+    private void safeSleep(long millis) {
+        try {
+            Thread.sleep(millis);
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new RuntimeException("Thread was interrupted", e);
+        }
+    }
+
+    // Метод выбора станции метро
     private void selectMetroStation(String stationName) {
         System.out.println("🚇 Selecting metro station: " + stationName);
 
@@ -50,7 +59,7 @@ public class OrderPage {
             WebElement metroField = wait.until(ExpectedConditions.elementToBeClickable(metroStationField));
             ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", metroField);
             metroField.click();
-            Thread.sleep(1000);
+            safeSleep(1000);
 
             // Пробуем разные локаторы для станции метро
             String[] stationLocators = {
@@ -78,7 +87,7 @@ public class OrderPage {
                     }
 
                     stationSelected = true;
-                    Thread.sleep(1000);
+                    safeSleep(1000);
                     break;
 
                 } catch (Exception e) {
@@ -92,7 +101,7 @@ public class OrderPage {
 
                 // Метод 1: Ввод текста и выбор из списка
                 metroField.sendKeys(stationName);
-                Thread.sleep(2000);
+                safeSleep(2000);
 
                 // Ищем любую станцию в выпадающем списке
                 List<WebElement> metroOptions = driver.findElements(By.xpath("//div[contains(@class, 'select-search__option')]"));
@@ -105,7 +114,7 @@ public class OrderPage {
                 // Метод 2: Используем клавиши
                 if (!stationSelected) {
                     metroField.sendKeys(Keys.ARROW_DOWN);
-                    Thread.sleep(500);
+                    safeSleep(500);
                     metroField.sendKeys(Keys.ENTER);
                     stationSelected = true;
                 }
@@ -117,11 +126,11 @@ public class OrderPage {
                 System.out.println("❌ Failed to select metro station '" + stationName + "'");
             }
 
-            Thread.sleep(1000);
+            safeSleep(1000);
 
         } catch (Exception e) {
             System.out.println("🚨 Error selecting metro station '" + stationName + "': " + e.getMessage());
-            throw e;
+            throw new RuntimeException(e);
         }
     }
 
@@ -135,7 +144,7 @@ public class OrderPage {
         driver.findElement(lastNameField).sendKeys(order.getLastName());
         driver.findElement(addressField).sendKeys(order.getAddress());
 
-        // Используем исправленный метод выбора метро
+        // Используем метод выбора метро
         selectMetroStation(order.getMetroStation());
 
         driver.findElement(phoneField).sendKeys(order.getPhone());
