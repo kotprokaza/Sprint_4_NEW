@@ -6,7 +6,6 @@ import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.support.ui.ExpectedConditions;
 import org.openqa.selenium.support.ui.WebDriverWait;
-import ru.yandex.scooter.config.AppConfig;
 import ru.yandex.scooter.model.Order;
 
 import java.time.Duration;
@@ -15,7 +14,7 @@ public class OrderPage {
     private final WebDriver driver;
     private final WebDriverWait wait;
 
-    // Локаторы
+    // Локаторы для формы заказа
     private final By firstNameField = By.xpath("//input[@placeholder='* Имя']");
     private final By lastNameField = By.xpath("//input[@placeholder='* Фамилия']");
     private final By addressField = By.xpath("//input[@placeholder='* Адрес: куда привезти заказ']");
@@ -25,11 +24,10 @@ public class OrderPage {
 
     private final By deliveryDateField = By.xpath("//input[@placeholder='* Когда привезти самокат']");
     private final By rentalPeriodField = By.className("Dropdown-placeholder");
-    private final By rentalPeriodOptions = By.xpath("//div[contains(@class, 'Dropdown-option')]");
     private final By blackColorCheckbox = By.id("black");
     private final By greyColorCheckbox = By.id("grey");
     private final By commentField = By.xpath("//input[@placeholder='Комментарий для курьера']");
-    private final By orderButton = By.xpath("//div[contains(@class, 'Order_Buttons')]//button[text()='Заказать']");
+    private final By orderButton = By.xpath("//button[text()='Заказать']");
 
     private final By confirmationModal = By.className("Order_Modal__YZD3");
     private final By yesButton = By.xpath("//button[text()='Да']");
@@ -40,38 +38,38 @@ public class OrderPage {
         this.wait = new WebDriverWait(driver, Duration.ofSeconds(15));
     }
 
+    // Метод выбора станции метро
+    private void selectMetroStation(String stationName) {
+        WebElement metroField = wait.until(ExpectedConditions.elementToBeClickable(metroStationField));
+        ((JavascriptExecutor) driver).executeScript("arguments[0].scrollIntoView(true);", metroField);
+        metroField.click();
+
+        WebElement station = wait.until(ExpectedConditions.elementToBeClickable(
+            By.xpath("//div[text()='" + stationName + "']")));
+        station.click();
+    }
+
     public void fillFirstPage(Order order) {
-        // Ждем загрузки формы
         wait.until(ExpectedConditions.visibilityOfElementLocated(firstNameField));
 
         driver.findElement(firstNameField).sendKeys(order.getFirstName());
         driver.findElement(lastNameField).sendKeys(order.getLastName());
         driver.findElement(addressField).sendKeys(order.getAddress());
-
-        // Выбор станции метро
-        driver.findElement(metroStationField).click();
-        WebElement metroOption = wait.until(ExpectedConditions.elementToBeClickable(
-                By.xpath("//div[text()='" + order.getMetroStation() + "']")));
-        ((JavascriptExecutor) driver).executeScript("arguments[0].click();", metroOption);
-
+        selectMetroStation(order.getMetroStation());
         driver.findElement(phoneField).sendKeys(order.getPhone());
     }
 
     public void clickNextButton() {
         WebElement nextBtn = wait.until(ExpectedConditions.elementToBeClickable(nextButton));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", nextBtn);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(deliveryDateField));
     }
 
     public void fillSecondPage(Order order) {
-        // Ждем загрузки второй страницы
-        wait.until(ExpectedConditions.visibilityOfElementLocated(deliveryDateField));
-
-        // Установка даты
         WebElement dateField = driver.findElement(deliveryDateField);
         dateField.clear();
         dateField.sendKeys(order.getDeliveryDate());
 
-        // Выбор срока аренды
         WebElement periodField = wait.until(ExpectedConditions.elementToBeClickable(rentalPeriodField));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", periodField);
 
@@ -79,7 +77,6 @@ public class OrderPage {
                 By.xpath("//div[text()='" + order.getRentalPeriod() + "']")));
         ((JavascriptExecutor) driver).executeScript("arguments[0].click();", periodOption);
 
-        // Выбор цвета
         if ("black".equals(order.getColor())) {
             WebElement blackCheckbox = wait.until(ExpectedConditions.elementToBeClickable(blackColorCheckbox));
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", blackCheckbox);
@@ -88,7 +85,6 @@ public class OrderPage {
             ((JavascriptExecutor) driver).executeScript("arguments[0].click();", greyCheckbox);
         }
 
-        // Комментарий
         if (order.getComment() != null && !order.getComment().isEmpty()) {
             driver.findElement(commentField).sendKeys(order.getComment());
         }
